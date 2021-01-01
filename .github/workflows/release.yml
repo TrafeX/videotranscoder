@@ -1,0 +1,32 @@
+name: Build release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - '*'
+
+jobs:
+
+  build-release:
+    name: Build release
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - name: Set up Go 1.15
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+      id: go
+
+    - name: Build release
+      run: |
+        make build-all
+    
+    - name: Publish release
+      run: |
+        echo '${{ secrets.GITHUB_TOKEN }}' | gh auth login --with-token
+        make release

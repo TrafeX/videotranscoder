@@ -9,27 +9,54 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 
 	"github.com/fatih/color"
+)
+
+var (
+	name       = "videotranscoder"
+	build      = "none"
+	version    = "dev-build"
+	goVersion  = runtime.Version()
+	versionStr = fmt.Sprintf("%s version %v, build %v %v", name, version, build, goVersion)
 )
 
 func parseCliArguments() (string, string, bool) {
 	var sourcePath string
 	var targetPath string
 	var overwriteExisting bool
+	var printVersion bool
+	var printHelp bool
 
 	flag.StringVar(&sourcePath, "source", "", "Path to source folder")
 	flag.StringVar(&targetPath, "target", "", "Path to target folder")
-	flag.BoolVar(&overwriteExisting, "overwrite", false, "Overwrite existing files")
+	flag.BoolVar(&overwriteExisting, "overwrite", false, "Overwrite existing files in the target folder")
+	flag.BoolVar(&printVersion, "version", false, "Print version information")
+	flag.BoolVar(&printHelp, "help", false, "Print help and usage information")
 
 	flag.Parse()
 
+	if printVersion {
+		fmt.Println(versionStr)
+		os.Exit(0)
+	}
+
+	if printHelp {
+		fmt.Printf("%s - transcode media to Apple's ProRes encoding\n", name)
+		fmt.Printf("usage: %s -source /path/to/media/files -target /path/to/output/folder\n\n", name)
+		fmt.Println("options:")
+		flag.PrintDefaults()
+		fmt.Println(versionStr)
+		os.Exit(0)
+	}
+
 	if sourcePath == "" {
-		fmt.Fprintf(os.Stderr, "missing required -source argument\n")
+		fmt.Fprintf(os.Stderr, "missing required -source argument\ntry '%s -help' for usage information\n", name)
 		os.Exit(2)
 	}
 	if targetPath == "" {
-		fmt.Fprintf(os.Stderr, "missing required -target argument\n")
+		fmt.Fprintf(os.Stderr, "missing required -target argument\ntry '%s -help' for usage information\n", name)
 		os.Exit(2)
 	}
 
