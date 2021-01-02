@@ -22,16 +22,18 @@ var (
 	versionStr = fmt.Sprintf("%s version %v, build %v %v", name, version, build, goVersion)
 )
 
-func parseCliArguments() (string, string, bool) {
+func parseCliArguments() (string, string, bool, bool) {
 	var sourcePath string
 	var targetPath string
 	var overwriteExisting bool
+	var verboseOutput bool
 	var printVersion bool
 	var printHelp bool
 
 	flag.StringVar(&sourcePath, "source", "", "Path to source folder")
 	flag.StringVar(&targetPath, "target", "", "Path to target folder")
 	flag.BoolVar(&overwriteExisting, "overwrite", false, "Overwrite existing files in the target folder")
+	flag.BoolVar(&verboseOutput, "verbose", false, "Show output of ffmpeg")
 	flag.BoolVar(&printVersion, "version", false, "Print version information")
 	flag.BoolVar(&printHelp, "help", false, "Print help and usage information")
 
@@ -60,7 +62,7 @@ func parseCliArguments() (string, string, bool) {
 		os.Exit(2)
 	}
 
-	return sourcePath, targetPath, overwriteExisting
+	return sourcePath, targetPath, overwriteExisting, verboseOutput
 }
 
 func transcodeFile(sourceFile string, targetFile string) ([]byte, error) {
@@ -71,11 +73,10 @@ func transcodeFile(sourceFile string, targetFile string) ([]byte, error) {
 
 func main() {
 
-	sourcePath, targetPath, overwriteExisting := parseCliArguments()
+	sourcePath, targetPath, overwriteExisting, verboseOutput := parseCliArguments()
 
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "target folder %s does not exist\n", targetPath)
-		os.Exit(2)
+		log.Fatalf("target folder %s does not exist", targetPath)
 	}
 	targetPath = filepath.Join(targetPath, path.Base(sourcePath)+"-transcoded")
 
@@ -84,8 +85,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Found %d videos to convert in source folder\n", len(files))
-	fmt.Println("Writing transcoded files to target folder:", targetPath)
+	log.Printf("Found %d videos to convert in source folder", len(files))
+	log.Printf("Writing transcoded files to target folder: %s", targetPath)
 
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 		err = os.Mkdir(targetPath, 0755)
@@ -100,19 +101,20 @@ func main() {
 		targetFile := filepath.Join(targetPath, file.Name())
 
 		if _, err := os.Stat(targetFile); !os.IsNotExist(err) && !overwriteExisting {
-			color.Yellow("Target file %s already exists, skipping %s..", targetFile, file.Name())
+			log.Printf("Target file %s already exists, skipping %s..", targetFile, file.Name())
 			continue
 		}
-		fmt.Println("Processing file", file.Name())
+		log.Println("Processing file", file.Name())
 
 		output, err := transcodeFile(sourceFile, targetFile)
 		if err != nil {
 			log.Fatal(err, string(output))
 		}
 
-		color.Blue("Output:\n%s", string(output))
-		fmt.Printf("Processed file %d of %d\n\n", nr+1, len(files))
+		if verboseOutput {
+			color.Blue("Result:\n%s", string(output))
+		}
+		log.Printf("Done processing file %s (%d of %d)", file.Name(), nr+1, len(files))
 	}
-	fmt.Println("All done.")
-
+	log.Println("All done.")
 }
