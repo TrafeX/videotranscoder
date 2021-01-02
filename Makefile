@@ -19,6 +19,9 @@ build-all:
 	# GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags release -ldflags $(LD_FLAGS) -o _build/${NAME}-$(VERSION)-windows-amd64
 	cd _build; sha256sum * > sha256sums.txt
 
+smoketest:
+	_build/${NAME}-$(VERSION)-linux-amd64 -help | grep "version ${VERSION}"
+
 release:
 	mkdir release
 	cp _build/* release
