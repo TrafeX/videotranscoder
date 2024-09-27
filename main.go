@@ -99,6 +99,7 @@ func main() {
 
 		sourceFile := filepath.Join(sourcePath, file.Name())
 		targetFile := filepath.Join(targetPath, file.Name())
+		targetFile = targetFile[:len(targetFile)-len(filepath.Ext(targetFile))] + ".mov"
 
 		if _, err := os.Stat(targetFile); !os.IsNotExist(err) && !overwriteExisting {
 			log.Printf("Target file %s already exists, skipping %s..", targetFile, file.Name())
