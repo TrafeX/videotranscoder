@@ -10,6 +10,11 @@ This will prepare your videos to be used in [DaVinci Resolve](https://www.richar
 You need to have ffmpeg installed on your system.
 
 Then, download the binary for your OS on the [releases](https://github.com/TrafeX/videotranscoder/releases) page and execute it.
+Or run;
+
+```
+go install github.com/TrafeX/videotranscoder
+```
 
 ## Usage
 
